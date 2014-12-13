@@ -13,6 +13,10 @@ type User struct {
 	conn net.Conn
 }
 
+var (
+	users []*User
+)
+
 func main() {
 	addr, err := net.ResolveTCPAddr("tcp", ":1200")
 	if err != nil {
@@ -52,10 +56,12 @@ func getUserNickname(conn net.Conn) string {
 }
 
 func bindNewUser(nick string, conn net.Conn) *User {
-	return &User{
+	user := &User{
 		nick: nick,
 		conn: conn,
 	}
+	users = append(users, user)
+	return user
 }
 
 func handleMsgsFromUser(user *User) {
@@ -67,5 +73,16 @@ func handleMsgsFromUser(user *User) {
 		}
 		msg := strings.TrimSpace(string(buf[:n]))
 		fmt.Printf("Received msg from %s: %s\n", user.nick, msg)
+		go broadcast(msg, user.nick)
+	}
+}
+
+func broadcast(msg, nick string) {
+	for _, user := range users {
+		if user.nick == nick {
+			continue
+		}
+		fmt.Println("Broadcasting message to", user.nick)
+		user.conn.Write([]byte(msg + "\n"))
 	}
 }
