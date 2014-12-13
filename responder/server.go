@@ -24,7 +24,6 @@ func main() {
 	}
 	for {
 		conn, err := listener.Accept()
-		fmt.Println(err)
 		if err == io.EOF {
 			break
 		}
